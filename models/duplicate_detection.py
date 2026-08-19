@@ -19,10 +19,10 @@ class ResPartner(models.Model):
 
     @api.depends('duplicate_status', 'duplicate_ref')
     def _compute_duplicate_display(self):
-        labels = {'email': 'Email', 'phone': 'Tel', 'name': 'Nom'}
+        labels = {'email': 'Doublon Email', 'phone': 'Doublon Tel', 'name': 'Doublon Nom'}
         for p in self:
             if p.duplicate_status and p.duplicate_status != 'none' and p.duplicate_ref:
-                p.duplicate_display = '%s (%s)' % (labels.get(p.duplicate_status, p.duplicate_status), p.duplicate_ref)
+                p.duplicate_display = '%s(%s)' % (labels.get(p.duplicate_status, p.duplicate_status), p.duplicate_ref)
             else:
                 p.duplicate_display = False
 
