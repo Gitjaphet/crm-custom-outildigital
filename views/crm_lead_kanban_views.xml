@@ -13,7 +13,7 @@
                     </span>
                     <span t-if="record.partner_duplicate_status.raw_value and record.partner_duplicate_status.raw_value != 'none'"
                           t-attf-class="badge #{record.partner_duplicate_status.raw_value == 'email' ? 'text-bg-danger' : record.partner_duplicate_status.raw_value == 'phone' ? 'text-bg-warning' : 'text-bg-secondary'}">
-                        <field name="partner_duplicate_status"/>
+                        <field name="partner_duplicate_display"/>
                     </span>
                 </div>
             </xpath>

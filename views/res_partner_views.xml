@@ -43,12 +43,11 @@
                        decoration-warning="partner_status == 'prospect'"
                        decoration-success="partner_status == 'client'"
                        decoration-muted="partner_status == 'ancien_client'"/>
-                <field name="duplicate_status" optional="show" widget="badge"
+                <field name="duplicate_status" invisible="1"/>
+                <field name="duplicate_display" optional="show" widget="badge"
                        decoration-danger="duplicate_status == 'email'"
                        decoration-warning="duplicate_status == 'phone'"
-                       decoration-muted="duplicate_status == 'name'"
-                       invisible="duplicate_status == 'none'"/>
-                <field name="duplicate_ref" optional="show" invisible="duplicate_status == 'none'"/>
+                       decoration-muted="duplicate_status == 'name'"/>
             </field>
         </field>
     </record>

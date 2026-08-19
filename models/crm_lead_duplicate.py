@@ -9,3 +9,8 @@ class CrmLead(models.Model):
         store=True,
         string='Doublon contact',
     )
+    partner_duplicate_display = fields.Char(
+        related='partner_id.duplicate_display',
+        store=True,
+        string='Doublon contact (detail)',
+    )

@@ -1,6 +1,6 @@
 import logging
 
-from odoo import fields, models
+from odoo import api, fields, models
 
 _logger = logging.getLogger(__name__)
 
@@ -15,6 +15,16 @@ class ResPartner(models.Model):
         ('email', 'Email identique'),
     ], string='Doublon', default='none', index=True)
     duplicate_ref = fields.Char(string='Ref. doublon', index=True)
+    duplicate_display = fields.Char(string='Doublon', compute='_compute_duplicate_display', store=True)
+
+    @api.depends('duplicate_status', 'duplicate_ref')
+    def _compute_duplicate_display(self):
+        labels = {'email': 'Email', 'phone': 'Tel', 'name': 'Nom'}
+        for p in self:
+            if p.duplicate_status and p.duplicate_status != 'none' and p.duplicate_ref:
+                p.duplicate_display = '%s (%s)' % (labels.get(p.duplicate_status, p.duplicate_status), p.duplicate_ref)
+            else:
+                p.duplicate_display = False
 
     @staticmethod
     def _normalize_text(s):
