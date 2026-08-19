@@ -1,0 +1,22 @@
+name: Déployer module Odoo
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Déployer sur le VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/mon-odoo-medevstack/custom_module/crm_custom_outildigital
+            git pull origin main
+            docker exec mon-odoo-web-1 python3 /opt/odoo/odoo-bin \
+              -d outildigital -u crm_custom_outildigital --stop-after-init
+            docker restart mon-odoo-web-1

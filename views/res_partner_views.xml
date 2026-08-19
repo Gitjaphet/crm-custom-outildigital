@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_inherit_status" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.status</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <field name="category_id" position="before">
+                <field name="partner_status" widget="badge"
+                       decoration-info="partner_status == 'lead'"
+                       decoration-warning="partner_status == 'prospect'"
+                       decoration-success="partner_status == 'client'"
+                       decoration-muted="partner_status == 'ancien_client'"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_res_partner_filter_inherit_status" model="ir.ui.view">
+        <field name="name">res.partner.search.inherit.status</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <filter name="supplier" position="after">
+                <separator/>
+                <filter string="Lead" name="status_lead" domain="[('partner_status','=','lead')]"/>
+                <filter string="Prospect" name="status_prospect" domain="[('partner_status','=','prospect')]"/>
+                <filter string="Client" name="status_client" domain="[('partner_status','=','client')]"/>
+                <filter string="Ancien client" name="status_ancien" domain="[('partner_status','=','ancien_client')]"/>
+                <separator/>
+                <filter string="Grouper par Statut" name="groupby_status" context="{'group_by':'partner_status'}"/>
+            </filter>
+        </field>
+    </record>
+</odoo>
