@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_crm_lead_kanban_inherit_status" model="ir.ui.view">
+        <field name="name">crm.lead.kanban.inherit.status</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_case_kanban_view_leads"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('d-flex')][@invisible='not partner_id']" position="after">
+                <div t-if="record.partner_status.raw_value" class="mt-1">
+                    <span t-attf-class="badge #{record.partner_status.raw_value == 'client' ? 'text-bg-success' : record.partner_status.raw_value == 'prospect' ? 'text-bg-warning' : record.partner_status.raw_value == 'ancien_client' ? 'text-bg-secondary' : 'text-bg-info'}">
+                        <field name="partner_status"/>
+                    </span>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>
