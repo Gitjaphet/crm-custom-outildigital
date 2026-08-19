@@ -6,9 +6,14 @@
         <field name="inherit_id" ref="crm.crm_case_kanban_view_leads"/>
         <field name="arch" type="xml">
             <xpath expr="//div[hasclass('d-flex')][@invisible='not partner_id']" position="after">
-                <div t-if="record.partner_status.raw_value" class="mt-1">
-                    <span t-attf-class="badge #{record.partner_status.raw_value == 'client' ? 'text-bg-success' : record.partner_status.raw_value == 'prospect' ? 'text-bg-warning' : record.partner_status.raw_value == 'ancien_client' ? 'text-bg-secondary' : 'text-bg-info'}">
+                <div class="mt-1 d-flex gap-1">
+                    <span t-if="record.partner_status.raw_value"
+                          t-attf-class="badge #{record.partner_status.raw_value == 'client' ? 'text-bg-success' : record.partner_status.raw_value == 'prospect' ? 'text-bg-warning' : record.partner_status.raw_value == 'ancien_client' ? 'text-bg-secondary' : 'text-bg-info'}">
                         <field name="partner_status"/>
+                    </span>
+                    <span t-if="record.partner_duplicate_status.raw_value and record.partner_duplicate_status.raw_value != 'none'"
+                          t-attf-class="badge #{record.partner_duplicate_status.raw_value == 'email' ? 'text-bg-danger' : record.partner_duplicate_status.raw_value == 'phone' ? 'text-bg-warning' : 'text-bg-secondary'}">
+                        <field name="partner_duplicate_status"/>
                     </span>
                 </div>
             </xpath>
