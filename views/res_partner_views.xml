@@ -48,6 +48,7 @@
                        decoration-warning="duplicate_status == 'phone'"
                        decoration-muted="duplicate_status == 'name'"
                        invisible="duplicate_status == 'none'"/>
+                <field name="duplicate_ref" optional="show" invisible="duplicate_status == 'none'"/>
             </field>
         </field>
     </record>

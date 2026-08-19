@@ -14,6 +14,7 @@ class ResPartner(models.Model):
         ('phone', 'Telephone identique'),
         ('email', 'Email identique'),
     ], string='Doublon', default='none', index=True)
+    duplicate_ref = fields.Char(string='Ref. doublon', index=True)
 
     @staticmethod
     def _normalize_text(s):
@@ -88,7 +89,22 @@ class ResPartner(models.Model):
                 key = r['norm_name'].split(' ')[0][:4]
                 blocks.setdefault(key, []).append(r)
 
-        ids_name = set()
+        # Union-Find pour regrouper les noms similaires en clusters
+        # (pas juste des paires isolees, mais tous les contacts relies entre eux)
+        parent = {}
+
+        def find(x):
+            parent.setdefault(x, x)
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]
+                x = parent[x]
+            return x
+
+        def union(a, b):
+            ra, rb = find(a), find(b)
+            if ra != rb:
+                parent[ra] = rb
+
         threshold = 0.55
         for key, group in blocks.items():
             n = len(group)
@@ -98,28 +114,55 @@ class ResPartner(models.Model):
                 for j in range(i + 1, n):
                     a, b = group[i], group[j]
                     if self._jaccard(a['norm_name'], b['norm_name']) >= threshold:
-                        ids_name.add(a['id'])
-                        ids_name.add(b['id'])
+                        union(a['id'], b['id'])
 
+        name_clusters = {}
+        for pid in list(parent.keys()):
+            root = find(pid)
+            name_clusters.setdefault(root, set()).add(pid)
+        name_clusters = {root: ids for root, ids in name_clusters.items() if len(ids) > 1}
+
+        Partner = self.env['res.partner']
+
+        # Reinitialise avant recalcul, pour ne pas garder de reference obsolete
+        Partner.search(['|', ('duplicate_status', '!=', 'none'), ('duplicate_ref', '!=', False)]).write({
+            'duplicate_status': 'none', 'duplicate_ref': False,
+        })
+
+        # Tags (inchange)
         ids_email = {r['id'] for g in email_groups.values() if len(g) > 1 for r in g}
         ids_phone = {r['id'] for g in phone_groups.values() if len(g) > 1 for r in g}
+        ids_name = set().union(*name_clusters.values()) if name_clusters else set()
 
         if ids_email:
-            self.env['res.partner'].browse(list(ids_email)).write({'category_id': [(4, tag_email.id)]})
+            Partner.browse(list(ids_email)).write({'category_id': [(4, tag_email.id)]})
         if ids_phone:
-            self.env['res.partner'].browse(list(ids_phone)).write({'category_id': [(4, tag_phone.id)]})
+            Partner.browse(list(ids_phone)).write({'category_id': [(4, tag_phone.id)]})
         if ids_name:
-            self.env['res.partner'].browse(list(ids_name)).write({'category_id': [(4, tag_name.id)]})
+            Partner.browse(list(ids_name)).write({'category_id': [(4, tag_name.id)]})
 
-        # Reinitialise le badge avant de le recalculer, pour ne pas garder
-        # un statut obsolete apres une fusion de doublons
-        self.env['res.partner'].search([('duplicate_status', '!=', 'none')]).write({'duplicate_status': 'none'})
-        if ids_name:
-            self.env['res.partner'].browse(list(ids_name)).write({'duplicate_status': 'name'})
-        if ids_phone:
-            self.env['res.partner'].browse(list(ids_phone)).write({'duplicate_status': 'phone'})
-        if ids_email:
-            self.env['res.partner'].browse(list(ids_email)).write({'duplicate_status': 'email'})
+        # Statut + reference partagee, dans l'ordre de priorite (nom, puis
+        # telephone, puis email en dernier pour ecraser en cas de chevauchement)
+        idx = 0
+        for root, ids in name_clusters.items():
+            idx += 1
+            Partner.browse(list(ids)).write({'duplicate_status': 'name', 'duplicate_ref': 'NOM-%03d' % idx})
+
+        idx = 0
+        for phone, group in phone_groups.items():
+            if len(group) <= 1:
+                continue
+            idx += 1
+            ids = [r['id'] for r in group]
+            Partner.browse(ids).write({'duplicate_status': 'phone', 'duplicate_ref': 'TEL-%03d' % idx})
+
+        idx = 0
+        for email, group in email_groups.items():
+            if len(group) <= 1:
+                continue
+            idx += 1
+            ids = [r['id'] for r in group]
+            Partner.browse(ids).write({'duplicate_status': 'email', 'duplicate_ref': 'EML-%03d' % idx})
 
         result = {'email': len(ids_email), 'phone': len(ids_phone), 'name': len(ids_name)}
         _logger.info(
