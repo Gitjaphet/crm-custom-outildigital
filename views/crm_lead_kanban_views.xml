@@ -5,6 +5,11 @@
         <field name="model">crm.lead</field>
         <field name="inherit_id" ref="crm.crm_case_kanban_view_leads"/>
         <field name="arch" type="xml">
+            <xpath expr="//field[@name='won_status']" position="after">
+                <field name="partner_status"/>
+                <field name="partner_duplicate_status"/>
+                <field name="partner_duplicate_display"/>
+            </xpath>
             <xpath expr="//div[hasclass('d-flex')][@invisible='not partner_id']" position="after">
                 <div class="mt-1 d-flex gap-1">
                     <span t-if="record.partner_status.raw_value"
